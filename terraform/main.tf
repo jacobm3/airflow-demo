@@ -15,7 +15,7 @@ data "aws_ami" "latest-ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 
   filter {
@@ -25,16 +25,21 @@ data "aws_ami" "latest-ubuntu" {
 }
 
 resource "aws_instance" "web" {
-  ami           = data.aws_ami.latest-ubuntu.id
+  ami = data.aws_ami.latest-ubuntu.id
 
   # t3a.large; 2 vcpu, 8GB ram, ebs = $1.80/day
   # m5d.large; 2 vcpu, 8GB ram, nvme = $2.70/day
+  # m5d.xlarge; 4 vcpu, 16GB ram, nvme = $5.42/day
   # m6a.large; 2 vcpu, 8GB ram, ebs = $2.07/day
 
-  instance_type = "m5d.large"
-  key_name      = "acer-wsl"
-  user_data     = file("userdata.sh")
+  instance_type        = "m5d.large"
+  key_name             = "acer-wsl"
+  user_data            = file("userdata.sh")
   iam_instance_profile = aws_iam_instance_profile.airflow.name
+  security_groups      = [aws_security_group.airflow.name]
+  lifecycle {
+    ignore_changes = [user_data]
+  }
   tags = {
     Name = "airflow"
   }
@@ -42,17 +47,17 @@ resource "aws_instance" "web" {
 
 resource "aws_iam_instance_profile" "airflow" {
   name = "airflow-instance-profile"
-  role        = aws_iam_role.instance_role.name
+  role = aws_iam_role.instance_role.name
 }
 
 resource "aws_iam_role" "instance_role" {
-  name        = "airflow-iam-role"
-  assume_role_policy = data.aws_iam_policy_document.instance_role.json
+  name                = "airflow-iam-role"
+  assume_role_policy  = data.aws_iam_policy_document.instance_role.json
   managed_policy_arns = [aws_iam_policy.s3_uploader_policy.arn]
 }
 
 resource "aws_iam_policy" "s3_uploader_policy" {
-  name = "s3_uploader_policy"
+  name   = "s3_uploader_policy"
   policy = data.aws_iam_policy_document.s3_uploader.json
 }
 
@@ -94,6 +99,38 @@ data "aws_iam_policy_document" "s3_uploader" {
   }
 }
 
+resource "aws_security_group" "airflow" {
+  name        = "airflow"
+  description = "Allow airflow inbound traffic"
+  vpc_id      = "vpc-4f778c2a"
 
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "airflow"
+  }
+}
 
 

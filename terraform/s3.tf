@@ -1,7 +1,7 @@
 resource "aws_s3_bucket" "site_bucket" {
   force_destroy = true
   #bucket        = "${var.bucket_name}-${random_string.random.result}"
-  bucket        = var.bucket_name
+  bucket = var.bucket_name
 }
 
 resource "aws_s3_bucket_policy" "site_bucket_policy" {
