@@ -51,9 +51,10 @@ resource "aws_iam_instance_profile" "airflow" {
 }
 
 resource "aws_iam_role" "instance_role" {
-  name                = "airflow-iam-role"
-  assume_role_policy  = data.aws_iam_policy_document.instance_role.json
-  managed_policy_arns = [aws_iam_policy.s3_uploader_policy.arn]
+  name               = "airflow-iam-role"
+  assume_role_policy = data.aws_iam_policy_document.instance_role.json
+  managed_policy_arns = [aws_iam_policy.s3_uploader_policy.arn,
+  aws_iam_policy.rekognition_policy.arn]
 }
 
 resource "aws_iam_policy" "s3_uploader_policy" {
@@ -61,10 +62,35 @@ resource "aws_iam_policy" "s3_uploader_policy" {
   policy = data.aws_iam_policy_document.s3_uploader.json
 }
 
-#resource "aws_iam_role_policy_attachment" "test-attach" {
-#  role       = aws_iam_role.instance_role.name
-#  policy_arn = aws_iam_policy.s3_uploader_policy.arn
-#}
+
+data "aws_iam_policy_document" "s3_uploader" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:*",
+    ]
+
+    resources = [
+      aws_s3_bucket.site_bucket.arn,
+      "${aws_s3_bucket.site_bucket.arn}/*",
+    ]
+  }
+}
+
+
+resource "aws_iam_policy" "rekognition_policy" {
+  name   = "rekognition_policy"
+  policy = data.aws_iam_policy_document.rekognition_policy_doc.json
+}
+
+data "aws_iam_policy_document" "rekognition_policy_doc" {
+  statement {
+    effect    = "Allow"
+    actions   = ["rekognition:*"]
+    resources = ["*"]
+  }
+}
 
 data "aws_iam_policy_document" "instance_role" {
   statement {
@@ -80,36 +106,17 @@ data "aws_iam_policy_document" "instance_role" {
   }
 }
 
-
-data "aws_iam_policy_document" "s3_uploader" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:PutObject",
-      "s3:DeleteObject",
-    ]
-
-    resources = [
-      aws_s3_bucket.site_bucket.arn,
-      "${aws_s3_bucket.site_bucket.arn}/*",
-    ]
-  }
-}
-
 resource "aws_security_group" "airflow" {
   name        = "airflow"
   description = "Allow airflow inbound traffic"
-  vpc_id      = "vpc-4f778c2a"
+  vpc_id      = var.vpc_id
 
   ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["73.166.0.0/16"]
   }
 
   ingress {
@@ -117,7 +124,8 @@ resource "aws_security_group" "airflow" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["73.166.0.0/16"]
+    #cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
