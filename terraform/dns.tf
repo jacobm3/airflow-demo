@@ -8,4 +8,5 @@ resource "namecheap_record" "foobar" {
   address = aws_instance.web.public_ip
   type    = "A"
   ttl     = "60"
+  depends_on = [ aws_instance.web ]
 }
