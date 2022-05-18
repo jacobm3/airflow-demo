@@ -32,7 +32,7 @@ resource "aws_instance" "web" {
   # m5d.xlarge; 4 vcpu, 16GB ram, nvme = $5.42/day
   # m6a.large; 2 vcpu, 8GB ram, ebs = $2.07/day
 
-  instance_type        = "m5d.large"
+  instance_type        = "t3a.large"
   key_name             = "acer-wsl"
   user_data            = file("userdata.sh")
   iam_instance_profile = aws_iam_instance_profile.airflow.name
