@@ -1,9 +1,17 @@
-output "public_ip" {
+output "airflow_public_ip" {
   value = aws_instance.web.public_ip
 }
 
-output "instance_id" {
+output "airflow_instance_id" {
   value = aws_instance.web.id
+}
+
+output "vault_public_ip" {
+  value = aws_instance.vault.public_ip
+}
+
+output "vault_instance_id" {
+  value = aws_instance.vault.id
 }
 
 output "bucket" {

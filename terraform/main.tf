@@ -31,8 +31,9 @@ resource "aws_instance" "web" {
   # m5d.large; 2 vcpu, 8GB ram, nvme = $2.70/day
   # m5d.xlarge; 4 vcpu, 16GB ram, nvme = $5.42/day
   # m6a.large; 2 vcpu, 8GB ram, ebs = $2.07/day
+  # c6a.xlarge: 4 vcpu, 8GB ram, ebs = $3.67/day
 
-  instance_type        = "t3a.large"
+  instance_type        = "c6a.xlarge"
   key_name             = "acer-wsl"
   user_data            = file("userdata.sh")
   iam_instance_profile = aws_iam_instance_profile.airflow.name
@@ -52,9 +53,10 @@ resource "aws_iam_instance_profile" "airflow" {
 
 resource "aws_iam_role" "instance_role" {
   name               = "airflow-iam-role"
+
   assume_role_policy = data.aws_iam_policy_document.instance_role.json
-  managed_policy_arns = [aws_iam_policy.s3_uploader_policy.arn,
-  aws_iam_policy.rekognition_policy.arn]
+  managed_policy_arns = [aws_iam_policy.s3_uploader_policy.arn, aws_iam_policy.rekognition_policy.arn]
+  #managed_policy_arns = [aws_iam_policy.s3_uploader_policy.arn]
 }
 
 resource "aws_iam_policy" "s3_uploader_policy" {
@@ -78,7 +80,6 @@ data "aws_iam_policy_document" "s3_uploader" {
   }
 }
 
-
 resource "aws_iam_policy" "rekognition_policy" {
   name   = "rekognition_policy"
   policy = data.aws_iam_policy_document.rekognition_policy_doc.json
@@ -91,6 +92,7 @@ data "aws_iam_policy_document" "rekognition_policy_doc" {
     resources = ["*"]
   }
 }
+
 
 data "aws_iam_policy_document" "instance_role" {
   statement {

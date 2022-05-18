@@ -1,1 +1,1 @@
-aws ec2 stop-instances --instance-ids $(terraform output --raw instance_id)
+aws ec2 stop-instances --instance-ids $(terraform output --raw airflow_instance_id)
