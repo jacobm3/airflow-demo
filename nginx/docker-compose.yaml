@@ -12,6 +12,7 @@ services:
       - ./etc-nginx:/etc/nginx
     networks:
       - demo_380ba4_airflow
+    restart: always
 networks:
   demo_380ba4_airflow:
     external: true
