@@ -1,28 +1,35 @@
 import base64
 import boto3
 import botocore
+import hvac
 import json
 import logging
+import os
 import re
 import requests
+import time
 from os.path import basename
 
 from datetime import datetime, timedelta
 from airflow.decorators import dag, task # DAG and task decorators for interfacing with the TaskFlow API
 from airflow.operators.python import get_current_context
 
+#from airflow.hooks.base_hook import BaseHook
+
+
+
 boto_config = botocore.config.Config(region_name='us-east-1')
 
 bucket = 'jm3-airflow'
 
 @dag(
-    dag_id='mars_life_taskflow_v17',
+    dag_id='mars_life_taskflow_v37',
     # This defines how often your DAG will run, or the schedule by which your DAG runs. In this case, this DAG
     # will run every 30 mins
     schedule_interval=timedelta(days=1),
     # This DAG is set to run for the first time on January 1, 2021. Best practice is to use a static
     # start_date. Subsequent DAG runs are instantiated based on scheduler_interval
-    start_date=datetime(2022, 5, 10),
+    start_date=datetime(2022, 5, 13),
     # When catchup=False, your DAG will only run for the latest schedule_interval. In this case, this means
     # that tasks will not be run between January 1, 2021 and 30 mins ago. When turned on, this DAG's first
     # run will be for the next 30 mins, per the schedule_interval
@@ -43,12 +50,17 @@ def mars_life_dag():
         context = get_current_context()
         date = context["logical_date"].strftime('%Y-%m-%d')
 
-        nasa_api_key = 'DEMO_KEY'
+        vault_client = hvac.Client(verify=False)
+        vault_resp = vault_client.secrets.kv.v2.read_secret_version(path='airflow/nasa') 
+        nasa_api_key = vault_resp['data']['data']['api_key']
+
         url = 'https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date=%s&api_key=%s' % (date,nasa_api_key)
         max_imgs = 5
 
         response = requests.get(url)
         api_results = json.loads(response.text)
+
+        logging.info('NASA response: %s' % api_results)
 
         img_list = []
         for x in api_results['photos'][0:max_imgs]:
@@ -64,6 +76,8 @@ def mars_life_dag():
         context = get_current_context()
         date = context["logical_date"].strftime('%Y-%m-%d')
 
+        logging.info('S3_put_images() img_list=%s' % str(img_list))
+
         s3 = boto3.client('s3')
 
         key_list = []
@@ -71,12 +85,13 @@ def mars_life_dag():
         if len(img_list) == 0:
             logging.info('No results from api for %s' % date)
             key = 'img/%s/%s' % (date,'no-results.html')
-            key_list.append(key)
+            #key_list.append(key)
             s3.put_object(Bucket=bucket, Key=key, Body='Empty list from API on %s.' % date)
         else:
             for imgurl in img_list:
                 imgfname = basename(imgurl)
                 key = 'img/%s/%s' % (date,imgfname)
+                key_list.append(key)
                 logging.info('Transferring %s' % imgurl)
                 s3.put_object(Bucket=bucket, Key=key, ACL='public-read', 
                     ContentDisposition='inline', ContentType='image/jpeg',
@@ -97,11 +112,21 @@ def mars_life_dag():
         return key_list
 
     @task()
+    def Pause_for_failure_demo(key_list: list):
+        """Pause for demo opportunity to break AWS permissions mid-run."""
+
+        time.sleep(2)
+
+        return key_list
+
+    @task()
     def Rekognition_detect_objects(key_list: list):
         """Perform Rekognition object detection on list of s3 objects. Store detections in s3 tags."""
 
         context = get_current_context()
         date = context["logical_date"].strftime('%Y-%m-%d')
+
+        logging.info('Rekognition_detect_objects(): key_list=%s' % str(key_list))
 
         rekog = boto3.client('rekognition', config=boto_config)
         s3 = boto3.client('s3')
@@ -116,6 +141,7 @@ def mars_life_dag():
             m = img_re.search(key)
             if m:
                 image = {'S3Object': {'Bucket': bucket, 'Name': key}}
+                logging.info('Submitting sample to Rekognition.detect_labels(%s)' % key)
                 resp = rekog.detect_labels(Image=image, MinConfidence=70)
 
                 # object detection bounding boxes are only sometimes available
@@ -131,7 +157,6 @@ def mars_life_dag():
                                 box = (x['Instances'][0]['BoundingBox'])
                             except Exception as e:
                                 pass
-
                 if box:
                     Tagging = { 'TagSet': [
                                 { 'Key': 'life-labels', 'Value': detect_str, }, 
@@ -142,10 +167,11 @@ def mars_life_dag():
                                 ] }
                 elif detect_str:
                     Tagging = { 'TagSet': [ { 'Key': 'life-labels', 'Value': detect_str, }, ] }
-
                 else:
-                    Tagging = { 'TagSet': [ { 'Key': 'life-labels', 'Value': 'nothing found', }, ] }
+                    detect_str = 'None'
+                    Tagging = { 'TagSet': [ { 'Key': 'life-labels', 'Value': detect_str, }, ] }
 
+                logging.info('Tagging object: %s tags: %s' % (key,detect_str))
                 s3.put_object_tagging(Bucket=bucket, Key=key, Tagging=Tagging)
 
         return True
@@ -182,6 +208,7 @@ def mars_life_dag():
 
     img_list = NASA_API_get_mars_img_list()
     key_list = S3_put_images(img_list)
+    key_list = Pause_for_failure_demo(key_list)
     status = Rekognition_detect_objects(key_list)
     status = Generate_bounding_box_images(status)
     status = Build_static_site(status)
