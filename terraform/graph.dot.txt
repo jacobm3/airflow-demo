@@ -1,0 +1,85 @@
+digraph {
+	compound = "true"
+	newrank = "true"
+	subgraph "root" {
+		"[root] aws_iam_instance_profile.airflow (expand)" [label = "aws_iam_instance_profile.airflow", shape = "box"]
+		"[root] aws_iam_policy.rekognition_policy (expand)" [label = "aws_iam_policy.rekognition_policy", shape = "box"]
+		"[root] aws_iam_policy.s3_uploader_policy (expand)" [label = "aws_iam_policy.s3_uploader_policy", shape = "box"]
+		"[root] aws_iam_role.instance_role (expand)" [label = "aws_iam_role.instance_role", shape = "box"]
+		"[root] aws_instance.vault (expand)" [label = "aws_instance.vault", shape = "box"]
+		"[root] aws_instance.web (expand)" [label = "aws_instance.web", shape = "box"]
+		"[root] aws_s3_bucket.site_bucket (expand)" [label = "aws_s3_bucket.site_bucket", shape = "box"]
+		"[root] aws_s3_bucket_acl.site_bucket_acl (expand)" [label = "aws_s3_bucket_acl.site_bucket_acl", shape = "box"]
+		"[root] aws_s3_bucket_policy.site_bucket_policy (expand)" [label = "aws_s3_bucket_policy.site_bucket_policy", shape = "box"]
+		"[root] aws_s3_bucket_versioning.bucket_versioning (expand)" [label = "aws_s3_bucket_versioning.bucket_versioning", shape = "box"]
+		"[root] aws_s3_bucket_website_configuration.site_config (expand)" [label = "aws_s3_bucket_website_configuration.site_config", shape = "box"]
+		"[root] aws_security_group.airflow (expand)" [label = "aws_security_group.airflow", shape = "box"]
+		"[root] aws_security_group.vault (expand)" [label = "aws_security_group.vault", shape = "box"]
+		"[root] data.aws_ami.latest-ubuntu (expand)" [label = "data.aws_ami.latest-ubuntu", shape = "box"]
+		"[root] data.aws_iam_policy_document.instance_role (expand)" [label = "data.aws_iam_policy_document.instance_role", shape = "box"]
+		"[root] data.aws_iam_policy_document.rekognition_policy_doc (expand)" [label = "data.aws_iam_policy_document.rekognition_policy_doc", shape = "box"]
+		"[root] data.aws_iam_policy_document.s3_uploader (expand)" [label = "data.aws_iam_policy_document.s3_uploader", shape = "box"]
+		"[root] data.aws_iam_policy_document.site_policy (expand)" [label = "data.aws_iam_policy_document.site_policy", shape = "box"]
+		"[root] namecheap_record.foobar (expand)" [label = "namecheap_record.foobar", shape = "box"]
+		"[root] output.airflow_instance_id" [label = "output.airflow_instance_id", shape = "note"]
+		"[root] output.airflow_public_ip" [label = "output.airflow_public_ip", shape = "note"]
+		"[root] output.bucket" [label = "output.bucket", shape = "note"]
+		"[root] output.bucket_domain_name" [label = "output.bucket_domain_name", shape = "note"]
+		"[root] output.vault_instance_id" [label = "output.vault_instance_id", shape = "note"]
+		"[root] output.vault_public_ip" [label = "output.vault_public_ip", shape = "note"]
+		"[root] provider[\"registry.terraform.io/hashicorp/aws\"]" [label = "provider[\"registry.terraform.io/hashicorp/aws\"]", shape = "diamond"]
+		"[root] provider[\"registry.terraform.io/robgmills/namecheap\"]" [label = "provider[\"registry.terraform.io/robgmills/namecheap\"]", shape = "diamond"]
+		"[root] var.bucket_name" [label = "var.bucket_name", shape = "note"]
+		"[root] var.vpc_id" [label = "var.vpc_id", shape = "note"]
+		"[root] aws_iam_instance_profile.airflow (expand)" -> "[root] aws_iam_role.instance_role (expand)"
+		"[root] aws_iam_policy.rekognition_policy (expand)" -> "[root] data.aws_iam_policy_document.rekognition_policy_doc (expand)"
+		"[root] aws_iam_policy.s3_uploader_policy (expand)" -> "[root] data.aws_iam_policy_document.s3_uploader (expand)"
+		"[root] aws_iam_role.instance_role (expand)" -> "[root] aws_iam_policy.rekognition_policy (expand)"
+		"[root] aws_iam_role.instance_role (expand)" -> "[root] aws_iam_policy.s3_uploader_policy (expand)"
+		"[root] aws_iam_role.instance_role (expand)" -> "[root] data.aws_iam_policy_document.instance_role (expand)"
+		"[root] aws_instance.vault (expand)" -> "[root] aws_security_group.vault (expand)"
+		"[root] aws_instance.vault (expand)" -> "[root] data.aws_ami.latest-ubuntu (expand)"
+		"[root] aws_instance.web (expand)" -> "[root] aws_iam_instance_profile.airflow (expand)"
+		"[root] aws_instance.web (expand)" -> "[root] aws_security_group.airflow (expand)"
+		"[root] aws_instance.web (expand)" -> "[root] data.aws_ami.latest-ubuntu (expand)"
+		"[root] aws_s3_bucket.site_bucket (expand)" -> "[root] provider[\"registry.terraform.io/hashicorp/aws\"]"
+		"[root] aws_s3_bucket.site_bucket (expand)" -> "[root] var.bucket_name"
+		"[root] aws_s3_bucket_acl.site_bucket_acl (expand)" -> "[root] aws_s3_bucket.site_bucket (expand)"
+		"[root] aws_s3_bucket_policy.site_bucket_policy (expand)" -> "[root] data.aws_iam_policy_document.site_policy (expand)"
+		"[root] aws_s3_bucket_versioning.bucket_versioning (expand)" -> "[root] aws_s3_bucket.site_bucket (expand)"
+		"[root] aws_s3_bucket_website_configuration.site_config (expand)" -> "[root] aws_s3_bucket.site_bucket (expand)"
+		"[root] aws_security_group.airflow (expand)" -> "[root] provider[\"registry.terraform.io/hashicorp/aws\"]"
+		"[root] aws_security_group.airflow (expand)" -> "[root] var.vpc_id"
+		"[root] aws_security_group.vault (expand)" -> "[root] provider[\"registry.terraform.io/hashicorp/aws\"]"
+		"[root] aws_security_group.vault (expand)" -> "[root] var.vpc_id"
+		"[root] data.aws_ami.latest-ubuntu (expand)" -> "[root] provider[\"registry.terraform.io/hashicorp/aws\"]"
+		"[root] data.aws_iam_policy_document.instance_role (expand)" -> "[root] provider[\"registry.terraform.io/hashicorp/aws\"]"
+		"[root] data.aws_iam_policy_document.rekognition_policy_doc (expand)" -> "[root] provider[\"registry.terraform.io/hashicorp/aws\"]"
+		"[root] data.aws_iam_policy_document.s3_uploader (expand)" -> "[root] aws_s3_bucket.site_bucket (expand)"
+		"[root] data.aws_iam_policy_document.site_policy (expand)" -> "[root] aws_s3_bucket.site_bucket (expand)"
+		"[root] namecheap_record.foobar (expand)" -> "[root] aws_instance.web (expand)"
+		"[root] namecheap_record.foobar (expand)" -> "[root] provider[\"registry.terraform.io/robgmills/namecheap\"]"
+		"[root] output.airflow_instance_id" -> "[root] aws_instance.web (expand)"
+		"[root] output.airflow_public_ip" -> "[root] aws_instance.web (expand)"
+		"[root] output.bucket" -> "[root] aws_s3_bucket.site_bucket (expand)"
+		"[root] output.bucket_domain_name" -> "[root] aws_s3_bucket.site_bucket (expand)"
+		"[root] output.vault_instance_id" -> "[root] aws_instance.vault (expand)"
+		"[root] output.vault_public_ip" -> "[root] aws_instance.vault (expand)"
+		"[root] provider[\"registry.terraform.io/hashicorp/aws\"] (close)" -> "[root] aws_instance.vault (expand)"
+		"[root] provider[\"registry.terraform.io/hashicorp/aws\"] (close)" -> "[root] aws_instance.web (expand)"
+		"[root] provider[\"registry.terraform.io/hashicorp/aws\"] (close)" -> "[root] aws_s3_bucket_acl.site_bucket_acl (expand)"
+		"[root] provider[\"registry.terraform.io/hashicorp/aws\"] (close)" -> "[root] aws_s3_bucket_policy.site_bucket_policy (expand)"
+		"[root] provider[\"registry.terraform.io/hashicorp/aws\"] (close)" -> "[root] aws_s3_bucket_versioning.bucket_versioning (expand)"
+		"[root] provider[\"registry.terraform.io/hashicorp/aws\"] (close)" -> "[root] aws_s3_bucket_website_configuration.site_config (expand)"
+		"[root] provider[\"registry.terraform.io/robgmills/namecheap\"] (close)" -> "[root] namecheap_record.foobar (expand)"
+		"[root] root" -> "[root] output.airflow_instance_id"
+		"[root] root" -> "[root] output.airflow_public_ip"
+		"[root] root" -> "[root] output.bucket"
+		"[root] root" -> "[root] output.bucket_domain_name"
+		"[root] root" -> "[root] output.vault_instance_id"
+		"[root] root" -> "[root] output.vault_public_ip"
+		"[root] root" -> "[root] provider[\"registry.terraform.io/hashicorp/aws\"] (close)"
+		"[root] root" -> "[root] provider[\"registry.terraform.io/robgmills/namecheap\"] (close)"
+	}
+}
+
