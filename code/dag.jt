@@ -8,7 +8,7 @@ from airflow import DAG
 # Operators; we need this to operate!
 from airflow.operators.bash import BashOperator
 with DAG(
-    'jinja_dag_v00',
+    'jinja_bfd_v03',
     # These args will get passed on to each operator
     # You can override them on a per-task basis during operator initialization
     default_args={
@@ -24,7 +24,7 @@ with DAG(
     start_date=datetime(2022, 5, 10),
     catchup=False,
     max_active_runs=1,
-    tags=['example'],
+    tags=['jinja','auto-generated'],
 ) as dag:
 
     t0 = BashOperator(
@@ -32,7 +32,7 @@ with DAG(
         bash_command='date',
     )
 
-{% for n in range(1,5) %}
+{% for n in range(1,7) %}
 
     t{{n}} = BashOperator(
         task_id='t{{n}}_sleep',
@@ -41,7 +41,7 @@ with DAG(
     )
     t0 >> t{{n}}
 
-  {% for m in range(1,5) %}
+  {% for m in range(1,7) %}
     t{{n}}_{{m}} = BashOperator(
         task_id='t{{n}}_{{m}}_sleep',
         depends_on_past=False,
@@ -49,7 +49,7 @@ with DAG(
     )
     t{{n}} >> t{{n}}_{{m}}
 
-  {% for p in range(1,20) %}
+  {% for p in range(1,30) %}
     t{{n}}_{{m}}_{{p}} = BashOperator(
         task_id='t{{n}}_{{m}}_{{p}}_sleep',
         depends_on_past=False,
@@ -65,6 +65,7 @@ with DAG(
     {% endif %}
 
   {% endfor %}
+
   {% endfor %}
 
 {% endfor %}

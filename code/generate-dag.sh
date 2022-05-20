@@ -1,1 +1,1 @@
-./g2.py > ~/demo/dags/jinja-dag.py 
+./g2.py > ~/demo/dags/jinja-bfd-v03.py 
