@@ -14,28 +14,23 @@ from datetime import datetime, timedelta
 from airflow.decorators import dag, task # DAG and task decorators for interfacing with the TaskFlow API
 from airflow.operators.python import get_current_context
 
-#from airflow.hooks.base_hook import BaseHook
-
-
-
 boto_config = botocore.config.Config(region_name='us-east-1')
-
 bucket = 'jm3-airflow'
 
 @dag(
-    dag_id='mars_life_taskflow_v37',
+    dag_id='mars_life_taskflow_v41',
     # This defines how often your DAG will run, or the schedule by which your DAG runs. In this case, this DAG
     # will run every 30 mins
     schedule_interval=timedelta(days=1),
     # This DAG is set to run for the first time on January 1, 2021. Best practice is to use a static
     # start_date. Subsequent DAG runs are instantiated based on scheduler_interval
-    start_date=datetime(2022, 5, 13),
+    start_date=datetime(2022, 4, 1),
     # When catchup=False, your DAG will only run for the latest schedule_interval. In this case, this means
     # that tasks will not be run between January 1, 2021 and 30 mins ago. When turned on, this DAG's first
     # run will be for the next 30 mins, per the schedule_interval
     catchup=True,
     max_active_runs=5,
-    tags=['example']) # If set, this tag is shown in the DAG view of the Airflow UI
+    tags=['nasa','mars','aws','aws:rekognition','aws:s3']) # If set, this tag is shown in the DAG view of the Airflow UI
 
 
 def mars_life_dag():
@@ -47,9 +42,11 @@ def mars_life_dag():
     def NASA_API_get_mars_img_list():
         """Load 1 day of Mars images to s3. Return list of img URLs"""
 
+        # Get logical execution date
         context = get_current_context()
         date = context["logical_date"].strftime('%Y-%m-%d')
 
+        # Retrieve NASA API key
         vault_client = hvac.Client(verify=False)
         vault_resp = vault_client.secrets.kv.v2.read_secret_version(path='airflow/nasa') 
         nasa_api_key = vault_resp['data']['data']['api_key']
@@ -73,6 +70,7 @@ def mars_life_dag():
     def S3_put_images(img_list: list):
         """Save list of img URLs to s3. Return list of object keys."""
 
+        # Get logical execution date
         context = get_current_context()
         date = context["logical_date"].strftime('%Y-%m-%d')
 
@@ -108,14 +106,6 @@ def mars_life_dag():
                 key = 'img/%s/%s' % (date,sample)
                 dest.copy(source, key)
                 key_list.append(key)
-
-        return key_list
-
-    @task()
-    def Pause_for_failure_demo(key_list: list):
-        """Pause for demo opportunity to break AWS permissions mid-run."""
-
-        time.sleep(2)
 
         return key_list
 
@@ -208,7 +198,6 @@ def mars_life_dag():
 
     img_list = NASA_API_get_mars_img_list()
     key_list = S3_put_images(img_list)
-    key_list = Pause_for_failure_demo(key_list)
     status = Rekognition_detect_objects(key_list)
     status = Generate_bounding_box_images(status)
     status = Build_static_site(status)
