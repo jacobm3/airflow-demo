@@ -18,7 +18,7 @@ boto_config = botocore.config.Config(region_name='us-east-1')
 bucket = 'jm3-airflow'
 
 @dag(
-    dag_id='mars_life_taskflow_v41',
+    dag_id='mars_life_taskflow_v42',
     # This defines how often your DAG will run, or the schedule by which your DAG runs. In this case, this DAG
     # will run every 30 mins
     schedule_interval=timedelta(days=1),
@@ -29,7 +29,7 @@ bucket = 'jm3-airflow'
     # that tasks will not be run between January 1, 2021 and 30 mins ago. When turned on, this DAG's first
     # run will be for the next 30 mins, per the schedule_interval
     catchup=True,
-    max_active_runs=5,
+    max_active_runs=3,
     tags=['nasa','mars','aws','aws:rekognition','aws:s3']) # If set, this tag is shown in the DAG view of the Airflow UI
 
 
