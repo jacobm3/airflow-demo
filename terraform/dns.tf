@@ -5,10 +5,10 @@ provider "namecheap" {
 resource "namecheap_record" "airflow" {
   domain     = "theneutral.zone"
   name       = "airflow"
-  address    = aws_instance.web.public_ip
+  address    = aws_instance.airflow.public_ip
   type       = "A"
   ttl        = "60"
-  depends_on = [aws_instance.web]
+  depends_on = [aws_instance.airflow]
 }
 
 resource "namecheap_record" "vault" {

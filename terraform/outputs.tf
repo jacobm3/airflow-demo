@@ -1,9 +1,9 @@
 output "airflow_public_ip" {
-  value = aws_instance.web.public_ip
+  value = aws_instance.airflow.public_ip
 }
 
 output "airflow_instance_id" {
-  value = aws_instance.web.id
+  value = aws_instance.airflow.id
 }
 
 output "vault_public_ip" {
