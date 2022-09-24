@@ -68,3 +68,5 @@ override.tf.json
 .terraform.lock.hcl
 
 tf.plan.out
+**/*.pyc
+
